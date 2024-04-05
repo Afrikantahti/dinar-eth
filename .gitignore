@@ -1,2 +1,4 @@
 .vault_passwd
 secrets
+secrets.yml
+secret.yml

@@ -3,10 +3,10 @@
     - secret.yml
   roles:
     - CLEANUP
-    - monit # make sure sshd running after netbird
 - hosts: eth_nodes
   roles:
-    - wireguard-clients # test first with node-fast21.yml
+    - ufw
+    - wireguard-clients
     - mev-boost
     - lighthouse
     - besu
