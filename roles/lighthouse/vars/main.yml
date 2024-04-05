@@ -1,0 +1,3 @@
+lighthouse_version: v5.1.3
+lighthouse_base_dir: /mnt/eth
+checkpoint_sync_url: https://mainnet.checkpoint.sigp.io

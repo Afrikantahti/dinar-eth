@@ -1,0 +1,13 @@
+all:
+  hosts:
+    node-fast21:
+      ansible_host: 100.84.106.215
+      wg_nn: 21
+    node-fast33:
+      ansible_host: 100.84.230.218
+      wg_nn: 33
+  children:
+    eth_nodes:
+      hosts:
+        node-fast21:
+        node-fast33:

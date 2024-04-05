@@ -1,0 +1,50 @@
+---
+# configure wireguard clients
+# vars from secret.yml
+# per host vars in hosts  file
+- name: set wg id
+  set_fact:
+    wg_nn: "{{ wg_nn }}"
+
+- name: if wg_nn = 21, then create wg0.conf
+  set_fact:
+    host_ip_result: "{{ wg_21_ip }}"
+    host_key_result: "{{wg_21_private_key}}"
+  when: wg_nn == 21
+
+- name: if wg_nn = 33, then create wg0.conf
+  set_fact:
+    host_ip_result: "{{ 33.ip }}"
+    host_key_result: "{{ 33.host_key }}"
+  when: wg_nn == 33
+
+- name: if wg_nn = 100, then create wg0.conf
+  set_fact:
+    host_ip_result: "{{ 100.ip }}"
+    host_key_result: "{{ 100.host_key }}"
+  when: wg_nn == 100
+
+- debug: msg="{{ wg_nn }}"
+- debug: msg="{{ host_ip_result }}"
+- debug: msg="{{ host_key_result }}"
+
+- name: Install wg-tools
+  apt:
+    name: wireguard-tools
+    state: present
+
+- name: Copy content to wg0.conf
+  copy:
+    content: |
+      [Interface]
+      Address = {{host_ip_result}}/32
+      PrivateKey = {{ host_key_result }}
+      [Peer]
+      PublicKey = {{ wgNet_host_public_key }}
+      AllowedIPs = {{ wgNet_allowedips }}
+      Endpoint = {{ wgNet_endpoint }} 
+      PersistentKeepalive = 25
+    dest: /etc/wireguard/wg0.conf
+    owner: root
+    group: root
+    mode: 0600

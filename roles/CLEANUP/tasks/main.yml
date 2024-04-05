@@ -1,0 +1,6 @@
+---
+# 3.4.2024
+- name: Remove xz-utils
+  user:
+    name: xz-utils
+    state: absent

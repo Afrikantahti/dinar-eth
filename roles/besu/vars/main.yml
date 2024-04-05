@@ -1,0 +1,4 @@
+besu_version: 24.3.0
+besu_base_dir: /mnt/eth
+besu_java_version: openjdk-19-jre-headless
+besu_genesis_file: /etc/besu/genesis.json

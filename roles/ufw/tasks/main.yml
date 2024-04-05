@@ -1,0 +1,46 @@
+---
+- name: install apt ufw
+  apt:
+    name: ufw
+    state: present
+# Default firewall rules for all nodes
+# allow more or deny more, per machine or per service roles 
+- name: ufw reset
+  ufw:
+    state: reset
+- name: Allow everything and enable UFW
+  ufw:
+    state: enabled
+
+# - name: Set logging
+#   ufw:
+#     logging: 'on'
+
+# - name: limit incoming SSH traffic
+#   ufw:
+#     rule: limit
+#     port: ssh
+#     proto: tcp
+- name: ufw default deny incoming
+  ufw:
+    default: deny
+    direction: incoming
+
+- name: ufw default allow outgoing
+  ufw:
+    default: allow
+    direction: outgoing
+
+- name: Allow incoming SSH traffic from wt0
+  ufw:
+    rule: allow
+    direction: in
+    interface: wt0
+    port: ssh
+
+
+
+
+
+
+

@@ -1,0 +1,101 @@
+---
+- debug: msg="{{ hostvars[inventory_hostname]['ansible_facts']['wg0']['ipv4']['address'] }}"
+- set_fact:
+    host_ip_result: "{{ hostvars[inventory_hostname]['ansible_facts']['wg0']['ipv4']['address'] }}"
+- debug: msg="{{ lighthouse_version}}"
+
+- name: allow mev-boost port 18550
+  ufw:
+    rule: allow
+    port: 5052
+    proto: tcp
+    state: enabled
+
+- name: Download Besu zip file
+  get_url:
+    url: "https://github.com/sigp/lighthouse/releases/download/{{ lighthouse_version }}/lighthouse-{{ lighthouse_version }}-x86_64-unknown-linux-gnu-portable.tar.gz"
+    dest: "/tmp/lighthouse-{{ lighthouse_version }}-x86_64-unknown-linux-gnu-portable.tar.gz"
+
+- name: Extract Lighthouse
+  unarchive:
+    src: "/tmp/lighthouse-{{ lighthouse_version }}-x86_64-unknown-linux-gnu-portable.tar.gz"
+    dest: /tmp
+    remote_src: yes
+    creates: /tmp/lighthouse
+
+- name: Copy Lighthouse files
+  copy:
+    src: /tmp/lighthouse
+    dest: /usr/bin/lighthouse
+    remote_src: yes
+    mode: '0755'
+
+- name: Create base directory
+  file:
+    path: "{{ lighthouse_base_dir }}"
+    state: directory
+    #mode: '0755'
+    #recurse: yes
+    #owner: root
+    #group: root
+  ignore_errors: true
+
+- name: Create Lighthouse directory
+  file:
+    path: "{{ lighthouse_base_dir }}/lighthouse-mainnet"
+    state: directory
+    #mode: '0755'
+    #recurse: yes
+    #owner: root
+    #group: root
+  ignore_errors: true
+
+- name: create file jwt.hex
+  copy:
+    dest: "{{ lighthouse_base_dir }}/lighthouse-mainnet/jwt.hex"
+    content: |
+      0x{{ jwt_hex_global }}
+    
+
+- name: Create Lighthouse service file
+  copy:
+    dest: /etc/systemd/system/lighthouse.service
+    content: |
+      [Unit]
+      Description=Lighthouse Ethereum Client
+      After=network.target
+
+      [Service]
+      User=root
+      Group=root
+      ExecStart=/usr/bin/lighthouse bn --datadir {{ lighthouse_base_dir }}/lighthouse-mainnet --network mainnet --http --staking --metrics --prune-payloads false --http-address 0.0.0.0 --execution-endpoint http://{{ host_ip_result }}:8551 --execution-jwt {{ lighthouse_base_dir }}/lighthouse-mainnet/jwt.hex --builder http://{{ host_ip_result }}:18550 --validator-monitor-auto  --checkpoint-sync-url {{ checkpoint_sync_url }}
+      Restart=always
+
+      [Install]
+      WantedBy=default.target
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+
+- name: Enable Lighthouse service
+  service:
+    name: lighthouse
+    enabled: yes
+    state: restarted
+    daemon_reload: yes
+
+- name: Send ntfy.sh update
+  uri:
+    url: "{{ ntfy_url_netdata }}"
+    headers:
+      Tittle: "Lighthouse update {{ inventory_hostname }}"
+      Authorization: "Bearer {{ ntfy_token }}"
+    method: POST
+    body: "{{ inventory_hostname }} Rolling update done"
+    force_basic_auth: true
+
+- name: current lighthouse version
+  command: lighthouse --version
+  register: lighthouse_version
+- debug: msg="{{ lighthouse_version.stdout}}"

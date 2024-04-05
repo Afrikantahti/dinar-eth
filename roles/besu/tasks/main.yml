@@ -1,0 +1,148 @@
+---
+#var=hostvars[inventory_hostname]['ansible_default_ipv4']['address']
+#- set_fact: 
+#    host_ip: {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}
+#- name: check wg0 ip_netns:
+#- debug: msg="{{ hostvars[inventory_hostname]['ansible_all_ipv4']['address'] }}"
+- debug: msg="{{ hostvars[inventory_hostname]['ansible_facts']['wg0']['ipv4']['address'] }}"
+- set_fact:
+    host_ip_result: "{{ hostvars[inventory_hostname]['ansible_facts']['wg0']['ipv4']['address'] }}"
+
+- name: ufw allow besu ports
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+    state: enabled
+  with_items:
+    - 8545
+    - 8546
+    - 8551
+    - 30303
+    
+- name: Install required packages
+  apt:
+    pkg: unzip
+    state: latest
+
+- name: Install required packages libjemalloc-dev
+  apt:
+    pkg: libjemalloc-dev
+    state: latest
+
+- name: Install required packages java
+  apt:
+    pkg: "{{ besu_java_version }}"
+    state: latest
+
+- name: Create directory /tmp/besu
+  file:
+    path: "/tmp/besu"
+    state: directory
+
+- name: Download Besu zip file
+  get_url:
+    url: "https://github.com/hyperledger/besu/releases/download/{{ besu_version }}/besu-{{ besu_version }}.zip"
+    dest: "/tmp/besu/besu-{{ besu_version }}.zip"
+
+- name: Extract Besu zip file
+  unarchive:
+    src: "/tmp/besu/besu-{{ besu_version }}.zip"
+    dest: "/tmp/besu"
+    remote_src: true
+
+- name: Copy files to lib
+  copy:
+    src: "/tmp/besu/besu-{{ besu_version }}/lib/"
+    dest: "/usr/lib/"
+    remote_src: true
+
+
+- name: Copy files to bin
+  copy:
+    src: "/tmp/besu/besu-{{ besu_version }}/bin/"
+    dest: "/usr/bin/"
+    remote_src: true
+
+- name: Create directory base directory
+  file:
+    path: "{{ besu_base_dir }}"
+    state: directory
+  ignore_errors: true
+
+- name: Create directory /besu-mainnet directory
+  file:
+    path: "{{ besu_base_dir }}/besu-mainnet"
+    state: directory
+  ignore_errors: true
+
+- name: write jwt.hex
+  copy:
+    dest: "{{besu_base_dir}}/besu-mainnet/jwt.hex"
+    content: |
+      0x{{ jwt_hex_global }}
+    
+
+- name: Create Besu system service file
+  copy:
+    content: |
+      [Unit]
+      Description=Besu Ethereum Client
+      After=network.target
+
+      [Service]
+      User=root
+      Group=root
+      ExecStart=/usr/bin/besu --pruning-enabled=true --sync-mode=X_SNAP \
+      --data-path={{besu_base_dir}}/besu-mainnet \
+      --host-allowlist=* \
+      --engine-host-allowlist=* \
+      --engine-jwt-secret={{besu_base_dir}}/besu-mainnet/jwt.hex \
+      --rpc-http-api=ETH,NET,WEB3,TRACE,TXPOOL,DEBUG  \
+      --data-storage-format=BONSAI \
+      --rpc-http-host={{ host_ip_result }} \
+      --engine-rpc-port=8551  \
+      --rpc-http-authentication-enabled=false \
+      --rpc-http-cors-origins=* \
+      --rpc-http-enabled \
+      --rpc-ws-enabled \
+      --rpc-ws-host="0.0.0.0" \
+      --rpc-http-port=8545 \
+      --rpc-ws-port=8546 \
+      --rpc-ws-api=ETH,NET,WEB3,TRACE,TXPOOL,DEBUG \
+      --metrics-enabled=true  \
+      --rpc-ws-authentication-enabled=false  \
+      --p2p-host={{ host_ip_result }} \
+      --p2p-port=30303
+      Restart=always
+
+      [Install]
+      WantedBy=default.target
+    dest: "/etc/systemd/system/besu.service"
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Enable Besu service
+  ansible.builtin.service:
+    name: besu
+    enabled: yes
+    state: started
+    daemon_reload: yes
+
+- name: Send ntfy.sh update
+  uri:
+    url: "{{ ntfy_url_netdata }}"
+    headers:
+      Tittle: "Besu update {{ inventory_hostname }}"
+      Authorization: "Bearer {{ ntfy_token }}"
+    method: POST
+    body: "{{ inventory_hostname }} Besu update done"
+    force_basic_auth: true
+
+- name: print current besu version
+  command: /usr/bin/besu --version
+  register: besu_version
+
+- debug: msg=" {{ besu_version }}"
