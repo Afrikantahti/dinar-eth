@@ -2,11 +2,10 @@
   vars_files:
     - secret.yml
   roles:
-    - REMOVE
+    - CLEANUP
     - monit # make sure sshd running after netbird
 - hosts: eth_nodes
   roles:
-    - prometheus
     - wireguard-clients # test first with node-fast21.yml
     - mev-boost
     - lighthouse
