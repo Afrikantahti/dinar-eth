@@ -1,24 +1,23 @@
 {
-  description = "A nixos cloudinit base image without nixos-infect";
+  config,
+  pkgs,
+  ...
+}: let
+  sshKeysPath = "/etc/ssh/ssh_host_ed25519_key";
+in {
+  imports = [./hw-config.nix];
 
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-  };
+    nixpkgs.hostPlatform = "x86_64-linux";
+    imports = [
+    "${nixpkgs}/nixos/modules/profiles/qemu-guest.nix"
+    ];
 
-  outputs = { self, nixpkgs }:
-  let
-    system = "x86_64-linux";
-    pkgs = nixpkgs.legacyPackages.${system};
-    inherit (pkgs) lib;
+    localization = {
+        hostname = "template";
+        timezone = "Europe/Helsinki";
+    };
 
-    baseModule = { lib, config, pkgs, ...}: {
-      # proxmox console
-      nixpkgs.hostPlatform = "x86_64-linux";
-      imports = [
-        "${nixpkgs}/nixos/modules/profiles/qemu-guest.nix"
-      ];
-
-      boot.kernelParams = [ "console=ttyS0,115200n8" ];
+     boot.kernelParams = [ "console=ttyS0,115200n8" ];
       boot.loader.grub.extraConfig = "
         serial --speed=115200 --unit=0 --word=8 --parity=no --stop=1
         terminal_input serial
@@ -42,7 +41,7 @@
 
       security.sudo.wheelNeedsPassword = false;
 
-      users.users.root = {
+      users.users.core = {
         isNormalUser = true;
         extraGroups = [ "wheel" ];
       };
@@ -68,7 +67,7 @@
             network:
               renderers: [ 'networkd' ]
             default_user:
-              name: root
+              name: core
           users:
               - default
           ssh_pwauth: false
@@ -94,14 +93,8 @@
     };
 
     make-disk-image = import "${nixpkgs}/nixos/lib/make-disk-image.nix";
-  in {
-    inherit pkgs;
-    image = make-disk-image {
-      inherit pkgs lib;
-      config = nixos.config;
-      name = "nixos-cloudinit";
-      format = "qcow2-compressed";
-      copyChannel = false;
-    };
+
   };
+
+  system.stateVersion = "23.11";
 }
