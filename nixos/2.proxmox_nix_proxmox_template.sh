@@ -6,8 +6,9 @@
 
 VMID="9001"
 nixos_version="23.11"
+bridge="vmbr2"
 
-qm create $VMID --memory 2048 --core 2 --balloon=768 --machine q35 --name nixos-${nixos_version}-kvm --net0 virtio,bridge=vmbr0,firewall=1
+qm create $VMID --memory 2048 --core 2 --balloon=768 --machine q35 --name nixos-${nixos_version}-kvm --net0 virtio,bridge=${bridge},firewall=1
 qm importdisk $VMID nixos.img local-lvm
 qm set $VMID --scsihw virtio-scsi-pci --scsi0 local-lvm:vm-${VMID}-disk-0,cache=writethrough,discard=on,iothread=1,ssd=1
 qm set $VMID --efidisk0 local-lvm:0,efitype=4m,,pre-enrolled-keys=1,size=528K
