@@ -3,9 +3,10 @@
 # Requirements:
 # Nixos
 # flake.nix
-
+cd
+rm -f nixos.img
 nix --experimental-features 'nix-command flakes' build .#image
-cd results
+cd result
 nix-shell -p qemu
 
 qemu-img convert nixos.qcow2 -O raw $HOME/nixos.img
