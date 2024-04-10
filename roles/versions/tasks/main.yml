@@ -1,0 +1,19 @@
+---
+
+- name: besu current version
+  shell: /usr/bin/besu --version
+  register: besu_version
+
+- debug: msg=" {{ besu_version.stdout }}"
+
+- name: lighthouse current version
+  shell: /usr/bin/lighthouse --version
+  register: lighthouse_version
+
+- debug: msg=" {{ lighthouse_version.stdout }}"
+
+- name: mev-boost current version
+  shell: /usr/bin/mev-boost -version
+  register: mevboost_version
+
+- debug: msg=" {{ mevboost_version.stdout }}"
