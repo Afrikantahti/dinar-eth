@@ -15,7 +15,7 @@
         system = "x86_64-linux";
         specialArgs = {inherit inputs outputs;};
         modules = [
-          ./nixosConfigurations/dinar-proxmox-cloud-image
+          ./dinar-proxmox-cloud-image
         ];
       };
     };

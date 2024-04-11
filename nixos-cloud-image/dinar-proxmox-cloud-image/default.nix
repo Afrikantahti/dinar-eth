@@ -3,7 +3,9 @@
   pkgs,
   ...
 }: let
-  sshKeysPath = "/etc/ssh/ssh_host_ed25519_key";
+    system = "x86_64-linux";
+    pkgs = nixpkgs.legacyPackages.${system};
+    inherit (pkgs) lib;
 in {
   imports = [./hw-config.nix];
 
