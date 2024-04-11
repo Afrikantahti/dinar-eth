@@ -7,6 +7,10 @@
 in {
   imports = [./hw-config.nix];
 
+    boot.loader.grub.enable = true;
+    boot.loader.grub.device = "/dev/sda";
+    boot.loader.grub.useOSProber = true;
+
     localization = {
         hostname = "template";
         timezone = "Europe/Helsinki";
@@ -21,7 +25,6 @@ in {
         fsType = "ext4";
         autoResize = true;
       };
-      boot.loader.grub.device = "/dev/sda";
 
       services.openssh.enable = true;
 
@@ -74,15 +77,13 @@ in {
           cloud_final_modules: []
           '';
       };
-    };
 
   #  nixos = nixpkgs.lib.nixosSystem {
   #    modules = [baseModule];
   #  };
 
-   make-disk-image = import "${nixpkgs}/nixos/lib/make-disk-image.nix";
-
-  };
+  make-disk-image = import "${nixpkgs}/nixos/lib/make-disk-image.nix";
 
   system.stateVersion = "23.11";
 }
+
