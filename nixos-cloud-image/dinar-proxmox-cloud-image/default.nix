@@ -7,22 +7,10 @@
 in {
   imports = [./hw-config.nix];
 
-    nixpkgs.hostPlatform = "x86_64-linux";
-    imports = [
-    "${nixpkgs}/nixos/modules/profiles/qemu-guest.nix"
-    ];
-
     localization = {
         hostname = "template";
         timezone = "Europe/Helsinki";
     };
-
-     boot.kernelParams = [ "console=ttyS0,115200n8" ];
-      boot.loader.grub.extraConfig = "
-        serial --speed=115200 --unit=0 --word=8 --parity=no --stop=1
-        terminal_input serial
-        terminal_output serial
-      ";
 
       networking = {
         hostName = "nixos-cloudinit";
@@ -88,11 +76,11 @@ in {
       };
     };
 
-    nixos = nixpkgs.lib.nixosSystem {
-      modules = [baseModule];
-    };
+  #  nixos = nixpkgs.lib.nixosSystem {
+  #    modules = [baseModule];
+  #  };
 
-    make-disk-image = import "${nixpkgs}/nixos/lib/make-disk-image.nix";
+   make-disk-image = import "${nixpkgs}/nixos/lib/make-disk-image.nix";
 
   };
 
