@@ -15,7 +15,7 @@
     nixosConfigurations = {
       dinar-proxmox-cloud-image = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        specialArgs = {inherit inputs outputs;};
+        #specialArgs = {inherit inputs outputs;};
         modules = [
           ./dinar-proxmox-cloud-image
         ];
