@@ -2,3 +2,6 @@
 secrets
 secrets.yml
 secret.yml
+nixos-cloud-image---/flake.nix
+nixos-cloud-image---/dinar-proxmox-cloud-image/default.nix
+nixos-cloud-image---/dinar-proxmox-cloud-image/hw-config.nix
