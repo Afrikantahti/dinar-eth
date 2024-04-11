@@ -86,6 +86,14 @@ in {
 
   make-disk-image = import "${nixpkgs}/nixos/lib/make-disk-image.nix";
 
+    inherit pkgs;
+    image = make-disk-image {
+      inherit pkgs lib;
+      config = nixos.config;
+      name = "nixos-cloudinit";
+      format = "qcow2-compressed";
+      copyChannel = false;
+
   system.stateVersion = "23.11";
 }
 
