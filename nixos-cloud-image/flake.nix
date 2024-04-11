@@ -10,7 +10,7 @@
   }: let
     system = "x86_64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
-    inherit (pkgs) lib;
+    #inherit (pkgs) lib;
   in {
     nixosConfigurations = {
       dinar-proxmox-cloud-image = nixpkgs.lib.nixosSystem {
